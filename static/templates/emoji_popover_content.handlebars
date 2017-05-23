@@ -1,18 +1,20 @@
 <div class="emoji-popover">
-    <div class="emoji-popover-top input-append">
-        <input class="emoji-popover-filter" type="text" autofocus placeholder={{t 'Search' }} />
-        <i class="icon-vector-search"></i>
-    </div>
-    <div class="emoji-popover-emoji-map" data-message-id="{{message_id}}">
-        <div class="emoji-popover-subheading" data-section="section_name">Heading Test</div>
-        {{#each emojis}}
-            <div class="emoji-popover-emoji {{# if message_id }}{{#if has_reacted}} reacted {{/if}}{{else}} composition {{/if}} reaction" title={{name}} tabindex="0">
-            {{#if is_realm_emoji}}
+  <div class="emoji-popover-top input-append">
+      <input class="emoji-popover-filter" type="text" autofocus placeholder={{t 'Search' }} />
+      <i class="icon-vector-search"></i>
+  </div>
+  <div class="emoji-popover-emoji-map" data-message-id="{{message_id}}">
+    {{#each emoji_categories }}
+      <div class="emoji-popover-subheading" data-section="{{name}}">{{name}}</div>
+      {{#each this.emojis }}
+        <div class="emoji-popover-emoji {{# if message_id }}{{#if has_reacted}} reacted {{/if}}{{else}} composition {{/if}} reaction" title={{name}} tabindex="0">
+          {{#if is_realm_emoji}}
             <img src="{{url}}" class="emoji" title= ":{{name}}:" />
-            {{else}}
+          {{else}}
             <div class="emoji emoji-{{css_class}}" title= ":{{name}}:" />
-            {{/if}}
+          {{/if}}
         </div>
-        {{/each}}
-    </div>
+      {{/each}}
+    {{/each}}
+  </div>
 </div>

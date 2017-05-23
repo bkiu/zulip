@@ -123,6 +123,7 @@
 }
 
 .emoji-info-popover .popover-content {
+  padding-bottom: 0;
 }
 
 .emoji-popover {
@@ -193,15 +194,11 @@
 
 .emoji-popover-category-tabs {
   background-color: #EBEBEB;
-  border-top-left-radius: 6px;
-  border-left-right-radius: 6px;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
   width: 100%;
   padding: 0px 10px;
   box-sizing: border-box;
-}
-
-.emoji-info-popover.bottom .arrow {
-  border-bottom-color: #EBEBEB;
 }
 
 .emoji-popover-category-tabs .emoji-popover-tab-item {

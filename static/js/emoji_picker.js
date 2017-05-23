@@ -52,6 +52,20 @@ function compute_placement(elt) {
     return placement;
 }
 
+function get_emoji_categories() {
+    return categories = [
+        { name: "People", icon: "fa-smile-o" },
+        { name: "Nature", icon: "fa-leaf" },
+        { name: "Foods", icon: "fa-cutlery" },
+        { name: "Activity", icon: "fa-soccer-ball-o" },
+        { name: "Places", icon: "fa-car" },
+        { name: "Objects", icon: "fa-lightbulb-o" },
+        { name: "Symbols", icon: "fa-hashtag" },
+    ];
+}
+
+var subhead_offsets = [];
+
 var generate_emoji_picker_content = (function () {
     var emoji_by_unicode = (function () {
         var map = {};
@@ -84,6 +98,7 @@ var generate_emoji_picker_content = (function () {
                 url: url,
                 is_realm_emoji: false,
                 name: _emoji ? _emoji.emoji_name : null,
+                css_class: emoji_unicode,
             };
         }).filter(function (emoji) {
             return emoji.name && emoji.url;
@@ -120,27 +135,21 @@ var generate_emoji_picker_content = (function () {
             }
         });
 
-        var categories = [
-            { name: "People", icon: "fa-smile-o" },
-            { name: "Nature", icon: "fa-leaf" },
-            { name: "Foods", icon: "fa-cutlery" },
-            { name: "Activity", icon: "fa-football-o" },
-            { name: "Places", icon: "fa-car" },
-            { name: "Objects", icon: "fa-lightbulb-o" },
-            { name: "Symbols", icon: "fa-hashtag" },
-        ];
+        var categories = get_emoji_categories();
 
         var emojis = categories.map(function (category) {
-            return Object.assign(category, { emojis: emoji_map[category] });
+            return Object.assign(category, { emojis: emoji_map[category.name] });
         });
 
+        /*
         _.each(emojis, function (category) {
             category.emojis.sort(promote_popular);
         });
+        */
 
         return templates.render('emoji_popover_content', {
             message_id: id,
-            emojis: emojis,
+            emoji_categories: emojis,
         });
     };
 }());
@@ -163,9 +172,13 @@ exports.toggle_emoji_popover = function (element, id) {
 
     if (elt.data('popover') === undefined) {
         elt.prop('title', '');
+        var template_args = {
+            class: "emoji-info-popover",
+            categories: get_emoji_categories(),
+        };
         elt.popover({
             placement: compute_placement(elt),
-            template:  templates.render('emoji_popover',   {class: "emoji-info-popover"}),
+            template:  templates.render('emoji_popover', template_args),
             title:     "",
             content:   generate_emoji_picker_content(id),
             trigger:   "manual",
@@ -180,6 +193,17 @@ exports.toggle_emoji_popover = function (element, id) {
         });
         current_message_emoji_popover_elem = elt;
         reactions.render_reaction_show_list();
+
+        $('.emoji-popover-subheading').each(function () {
+            subhead_offsets.push({
+                'section': $(this).attr('data-section'), 
+                'position_y': $(this).position().top
+            });
+        });
+        var $emoji_map = $('.emoji-popover-emoji-map');
+        $emoji_map.on("scroll", function () {
+            emoji_picker.emoji_select_tab($emoji_map);
+        });
     }
 };
 
@@ -197,29 +221,22 @@ exports.hide_emoji_popover = function () {
 };
 
 
-exports.emoji_select_tab = function (elt, offsets) {
+exports.emoji_select_tab = function (elt) {
     var scrolltop = elt.scrollTop();
     var currently_selected = "";
-    for (var i = 0; i < offsets.length; i++) {
-        if (scrolltop > offsets[i].position_y) {
-            currently_selected = offsets[i].section;
+    for (var i = 0; i < subhead_offsets.length; i++) {
+        if (scrolltop > subhead_offsets[i].position_y) {
+            currently_selected = subhead_offsets[i].section;
         }
     }
+    console.log(currently_selected);
     if (currently_selected) {
         $('.emoji-popover-tab-item.active').removeClass('active');
-        $('.emoji-popover-tab-item[data-tab_name="'+currently_selected+'"]').addClass('active);
+        $('.emoji-popover-tab-item[data-tab_name="'+currently_selected+'"]').addClass('active');
     }
 }
 
 exports.register_click_handlers = function () {
-    // Cache the offsets of the emoji sections
-    var offsets = [];
-    $('.emoji-popover-subheading').each(function () {
-        offsets.push({
-            'section': $(this).attr('data-section_name'), 
-            'position_y': $(this).position().top
-        );
-    });
 
     $(document).on('click', '.emoji-popover-emoji.composition', function (e) {
         var emoji_text = ':' + this.title + ':';
@@ -252,10 +269,6 @@ exports.register_click_handlers = function () {
         // element is not present, we use the message's
         // .icon-vector-chevron-down element as the base for the popover.
         emoji_picker.toggle_emoji_popover($(".selected_message .icon-vector-chevron-down")[0], msgid);
-    });
-
-    $(window).on("scroll", ".emoji-popover-emoji-map", function (e) {
-        emoji_picker.emoji_select_tab(this, offsets);
     });
 };
 

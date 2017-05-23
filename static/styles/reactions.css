@@ -118,6 +118,13 @@
     color: #0088CC;
 }
 
+.emoji-info-popover {
+  padding: 0;
+}
+
+.emoji-info-popover .popover-content {
+}
+
 .emoji-popover {
     display: inline-block;
     width: 240px;
@@ -125,20 +132,20 @@
 
 .emoji-popover-top {
     padding-bottom: 0;
+    position: relative;
 }
 
 .emoji-popover-top .icon-vector-search {
-    display: inline-block;
-    vertical-align: top;
-    padding: 8px;
+    position: absolute;
     color: #bbb;
-    cursor: pointer;
+    top: 6px;
+    left: 8px;
+    z-index: 3;
 }
 
-.emoji-popover-filter {
-    width: calc(100% - 48px);
+.emoji-popover-top .emoji-popover-filter {
     margin: auto;
-    padding-left: 3em;
+    padding-left: 2em;
 }
 
 .emoji-popover-emoji-map {
@@ -148,6 +155,12 @@
     overflow: hidden;
     display: block;
     height: 16.5em;
+}
+
+.emoji-popover-subheading {
+  font-weight: 600;
+  color: #333;
+  padding: 5px 3px;
 }
 
 .emoji-popover-emoji {
@@ -177,3 +190,31 @@
     margin: 0px 1px 0px 0px;
     line-height: 1em;
 }
+
+.emoji-popover-category-tabs {
+  background-color: #EBEBEB;
+  border-top-left-radius: 6px;
+  border-left-right-radius: 6px;
+  width: 100%;
+  padding: 0px 10px;
+  box-sizing: border-box;
+}
+
+.emoji-info-popover.bottom .arrow {
+  border-bottom-color: #EBEBEB;
+}
+
+.emoji-popover-category-tabs .emoji-popover-tab-item {
+  display: inline-block;
+  height: 25px;
+  padding: 6px 7px 0px;
+  color: #515151;
+  font-size: 17px;
+  border-bottom: 1px solid #e7e7e7;
+  cursor: pointer;
+}
+
+.emoji-popover-category-tabs .emoji-popover-tab-item.active {
+  background: #CECECE;
+}
+

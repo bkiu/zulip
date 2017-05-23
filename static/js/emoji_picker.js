@@ -117,6 +117,7 @@ exports.toggle_emoji_popover = function (element, id) {
         elt.prop('title', '');
         elt.popover({
             placement: compute_placement(elt),
+            template:  templates.render('emoji_popover',   {class: "emoji-info-popover"}),
             title:     "",
             content:   generate_emoji_picker_content(id),
             trigger:   "manual",
@@ -147,7 +148,31 @@ exports.hide_emoji_popover = function () {
     }
 };
 
+
+exports.emoji_select_tab = function (elt, offsets) {
+    var scrolltop = elt.scrollTop();
+    var currently_selected = "";
+    for (var i = 0; i < offsets.length; i++) {
+        if (scrolltop > offsets[i].position_y) {
+            currently_selected = offsets[i].section;
+        }
+    }
+    if (currently_selected) {
+        $('.emoji-popover-tab-item.active').removeClass('active');
+        $('.emoji-popover-tab-item[data-tab_name="'+currently_selected+'"]').addClass('active);
+    }
+}
+
 exports.register_click_handlers = function () {
+    // Cache the offsets of the emoji sections
+    var offsets = [];
+    $('.emoji-popover-subheading').each(function () {
+        offsets.push({
+            'section': $(this).attr('data-section_name'), 
+            'position_y': $(this).position().top
+        );
+    });
+
     $(document).on('click', '.emoji-popover-emoji.composition', function (e) {
         var emoji_text = ':' + this.title + ':';
         var textarea = $("#new_message_content");
@@ -179,6 +204,10 @@ exports.register_click_handlers = function () {
         // element is not present, we use the message's
         // .icon-vector-chevron-down element as the base for the popover.
         emoji_picker.toggle_emoji_popover($(".selected_message .icon-vector-chevron-down")[0], msgid);
+    });
+
+    $(window).on("scroll", ".emoji-popover-emoji-map", function (e) {
+        emoji_picker.emoji_select_tab(this, offsets);
     });
 };
 

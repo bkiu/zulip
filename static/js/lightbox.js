@@ -123,7 +123,7 @@ exports.open = function (image) {
 
 exports.show_from_selected_message = function () {
     var $message = $(".selected_message");
-    var $image = $message.find("img");
+    var $image = $message.find(".message_inline_image img");
 
     while ($image.length === 0) {
         $message = $message.prev();

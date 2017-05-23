@@ -84,6 +84,8 @@ exports.toggle_reaction = function (message_id, emoji_name) {
     if (selected_emoji) {
         emoji_name = selected_emoji.title;
     }
+    console.log(emoji_name);
+    console.log(selected_emoji);
 
     var has_reacted = exports.current_user_has_reacted_to_emoji(message, emoji_name);
     var operation = has_reacted ? 'remove' : 'add';
@@ -154,6 +156,7 @@ $(document).on('click', '.emoji-popover-emoji.reaction', function () {
     // the reaction is removed
     // otherwise, the reaction is added
     var emoji_name = this.title;
+    console.log(emoji_name);
     var message_id = $(this).parent().attr('data-message-id');
 
     var message = get_message(message_id);

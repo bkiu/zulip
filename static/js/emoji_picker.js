@@ -61,6 +61,7 @@ function get_emoji_categories() {
         { name: "Places", icon: "fa-car" },
         { name: "Objects", icon: "fa-lightbulb-o" },
         { name: "Symbols", icon: "fa-hashtag" },
+        { name: "Custom", icon: "fa-" },
     ];
 }
 
@@ -126,6 +127,8 @@ var generate_emoji_picker_content = (function () {
                     has_reacted: true,
                     css_class: emoji.emojis_name_to_css_class[emoji_name],
                 });
+                console.log("_emoji");
+                console.log(_emoji);
             });
         }
 
@@ -147,6 +150,7 @@ var generate_emoji_picker_content = (function () {
         });
         */
 
+        console.log(emojis);
         return templates.render('emoji_popover_content', {
             message_id: id,
             emoji_categories: emojis,

@@ -7,7 +7,7 @@ var exports = {};
 // implemented as the emoji_popover.
 var current_message_emoji_popover_elem;
 
-function promote_popular(a, b) {
+var promote_popular = (function () {
     function rank(name) {
         switch (name) {
             case '+1': return 1;
@@ -19,14 +19,16 @@ function promote_popular(a, b) {
         }
     }
 
-    var diff = rank(a.name) - rank(b.name);
+    return function (a, b) {
+        var diff = rank(a.name) - rank(b.name);
 
-    if (diff !== 0) {
-        return diff;
-    }
+        if (diff !== 0) {
+            return diff;
+        }
 
-    return util.strcmp(a.name, b.name);
-}
+        return util.strcmp(a.name, b.name);
+    };
+}());
 
 function compute_placement(elt) {
     var approx_popover_height = 400;
@@ -50,52 +52,98 @@ function compute_placement(elt) {
     return placement;
 }
 
-function generate_emoji_picker_content(id) {
-    var emojis = _.clone(emoji.emojis_name_to_css_class);
+var generate_emoji_picker_content = (function () {
+    var emoji_by_unicode = (function () {
+        var map = {};
 
-    var realm_emojis = emoji.realm_emojis;
-    _.each(realm_emojis, function (realm_emoji, realm_emoji_name) {
-        emojis[realm_emoji_name] = {
-            name: realm_emoji_name,
-            is_realm_emoji: true,
-            url: realm_emoji.emoji_url,
-        };
-    });
-
-    // Reacting to a specific message
-    if (id !== undefined) {
-        var emojis_used = reactions.get_emojis_used_by_user_for_message_id(id);
-        _.each(emojis_used, function (emoji_name) {
-            emojis[emoji_name] = {
-                name: emoji_name,
-                has_reacted: true,
-                css_class: emoji.emojis_name_to_css_class[emoji_name],
-                is_realm_emoji: emojis[emoji_name].is_realm_emoji,
-                url: emojis[emoji_name].url,
-            };
+        _.each(emoji.emojis, function (emoji) {
+            map[emoji.codepoint] = emoji;
         });
-    }
-
-    var emoji_recs = _.map(emojis, function (val, emoji_name) {
-        if (val.name) {
-            return val;
-        }
 
         return {
-            name: emoji_name,
-            css_class: emoji.emojis_name_to_css_class[emoji_name],
-            has_reacted: false,
-            is_realm_emoji: false,
+            find: function (unicode) {
+                return map[unicode];
+            },
+
+            // this kills the map we create on initial creation so that we can
+            // free up memory.
+            kill: function () {
+                map = null;
+            },
         };
+    }());
+
+    var emoji_map = Object.assign({}, emoji_codes.emoji_catalog);
+
+    _.each(emoji_map, function (category, key) {
+        emoji_map[key] = _.map(category, function (emoji_unicode) {
+            var url = emoji.emojis_by_unicode[emoji_unicode];
+            var _emoji = emoji_by_unicode.find(emoji_unicode);
+
+            return {
+                url: url,
+                is_realm_emoji: false,
+                name: _emoji ? _emoji.emoji_name : null,
+            };
+        }).filter(function (emoji) {
+            return emoji.name && emoji.url;
+        });
     });
 
-    var args = {
-        message_id: id,
-        emojis: emoji_recs.sort(promote_popular),
-    };
+    return function (id) {
+        emoji_map.Custom = [];
+        _.each(emoji.realm_emoji, function (realm_emoji, realm_emoji_name) {
+            emoji_map.Custom[realm_emoji_name] = {
+                name: realm_emoji_name,
+                is_realm_emoji: true,
+                url: realm_emoji.emoji_url,
+            };
+        });
 
-    return templates.render('emoji_popover_content', args);
-}
+        // Reacting to a specific message
+        if (id !== undefined) {
+            var emojis_used = reactions.get_emojis_used_by_user_for_message_id(id);
+            _.each(emojis_used, function (emoji_name) {
+                var unicode = emoji_codes.name_to_codepoint[emoji_name];
+                var _emoji = emoji_by_unicode.find(unicode);
+
+                Object.assign(_emoji, {
+                    has_reacted: true,
+                    css_class: emoji.emojis_name_to_css_class[emoji_name],
+                });
+            });
+        }
+
+        Object.keys(emoji_map).forEach(function (category) {
+            if (emoji_map[category].length === 0) {
+                delete emoji_map[category];
+            }
+        });
+
+        var categories = [
+            { name: "People", icon: "fa-smile-o" },
+            { name: "Nature", icon: "fa-leaf" },
+            { name: "Foods", icon: "fa-cutlery" },
+            { name: "Activity", icon: "fa-football-o" },
+            { name: "Places", icon: "fa-car" },
+            { name: "Objects", icon: "fa-lightbulb-o" },
+            { name: "Symbols", icon: "fa-hashtag" },
+        ];
+
+        var emojis = categories.map(function (category) {
+            return Object.assign(category, { emojis: emoji_map[category] });
+        });
+
+        _.each(emojis, function (category) {
+            category.emojis.sort(promote_popular);
+        });
+
+        return templates.render('emoji_popover_content', {
+            message_id: id,
+            emojis: emojis,
+        });
+    };
+}());
 
 exports.toggle_emoji_popover = function (element, id) {
     var last_popover_elem = current_message_emoji_popover_elem;

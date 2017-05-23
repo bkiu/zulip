@@ -134,7 +134,7 @@ exports.show_from_selected_message = function () {
     }
 
     if ($image.length !== 0) {
-      exports.open($image);
+        exports.open($image);
     }
 };
 
